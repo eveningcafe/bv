@@ -1,0 +1,13 @@
+aodh alarm create \
+  --name cpu_hi \
+  --type gnocchi_resources_threshold \
+  --description 'instance running hot' \
+  --metric cpu_util \
+  --threshold 60.0 \
+  --comparison-operator gt \
+  --aggregation-method mean \
+  --granularity 60 \
+  --evaluation-periods 1 \
+  --alarm-action 'https://hooks.slack.com/services/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' \
+  --resource-id  \
+  --resource-type instance

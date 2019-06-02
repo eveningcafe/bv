@@ -1,0 +1,122 @@
+heat_template_version: 2016-10-14
+description: Example auto scale group, policy and alarm
+parameters:
+  network:
+    type: string
+    description: Network ID to use for the instance.
+  max_size:
+    type: string
+    description: max number of instance.
+  min_size:
+    type: string
+    description: min number of instance.
+  desired_size:
+    type: string
+    description: defaut number of instance.
+  metric_watch:
+    type: string
+    description: metric for alarm rule
+    default: cpu_util
+  scale_down_threshold:
+    type: string
+    description: threshold metric then scale down
+    default: 0.5
+  scale_up_threshold:
+    type: string
+    description: threshold  metric then scale down
+    default: 80
+  start_script:
+    type: string
+    description: script run when host start
+    default: echo "hello world"
+
+resources:
+  scaling_group:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      cooldown: 300
+      desired_capacity: { get_param: desired_size }
+      max_size: { get_param: max_size }
+      min_size: { get_param: min_size }
+      resource:
+        type: OS::Nova::Server
+        properties:
+          image: cirros
+          flavor: m1.tiny
+          key_name: mykey
+          networks:
+          - network: { get_param: network }
+          metadata: {"metering.server_group": {get_param: "OS::stack_id"}}
+          user_data:
+               |
+               # !/bin/bash
+               $SHELL_SCRIPT
+               # ...
+
+  scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: { get_resource: scaling_group }
+      cooldown: 300
+      scaling_adjustment: 1
+
+  scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: { get_resource: scaling_group }
+      cooldown: 300
+      scaling_adjustment: -1
+
+  alarm_high:
+    type: OS::Aodh::GnocchiAggregationByResourcesAlarm
+    properties:
+      description: Scale up if metric > theshold
+      metric: { get_param: metric_watch }
+      aggregation_method: mean
+      granularity: 60
+      evaluation_periods: 1
+      threshold: { get_param: scale_up_threshold }
+      resource_type: instance
+      comparison_operator: gt
+      alarm_actions:
+        - str_replace:
+            template: trust+url
+            params:
+              url: {get_attr: [scaleup_policy, signal_url]}
+      query:
+        str_replace:
+          template: '{"=": {"server_group": "stack_id"}}'
+          params:
+            stack_id: {get_param: "OS::stack_id"}
+
+  alarm_low:
+    type: OS::Aodh::GnocchiAggregationByResourcesAlarm
+    properties:
+      metric: { get_param: metric_watch }
+      aggregation_method: mean
+      granularity: 60
+      evaluation_periods: 1
+      threshold: { get_param: scale_down_threshold }
+      resource_type: instance
+      comparison_operator: lt
+      alarm_actions:
+        - str_replace:
+            template: trust+url
+            params:
+              url: {get_attr: [scaledown_policy, signal_url]}
+      query:
+        str_replace:
+          template: '{"=": {"server_group": "stack_id"}}'
+          params:
+            stack_id: {get_param: "OS::stack_id"}
+
+outputs:
+  scaleup_policy_signal_url:
+    value: {get_attr: [scaleup_policy, signal_url]}
+
+  scaledown_policy_signal_url:
+    value: {get_attr: [scaledown_policy, signal_url]}
+
+

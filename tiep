@@ -2,3 +2,50 @@ https://www.google.com/search?rlz=1C1GCEU_viVN830VN831&ei=qPn1XOmCH5TN-QbcoYDwDQ
 https://www.google.com/search?rlz=1C1GCEU_viVN830VN831&ei=qPn1XOmCH5TN-QbcoYDwDQ&q=amqp++prometheus+bridge+convert+metric+collectd+smart+gateway&oq=amqp++prometheus+bridge+convert+metric+collectd+smart+gateway&gs_l=psy-ab.3...5330.9179..9476...0.0..0.180.1850.0j14......0....1..gws-wiz.......0i71j33i21j33i160.Klis13q8rWI
 
 https://wiki.opnfv.org/download/attachments/10289180/Service%20Assurance%20MVP%20v1.4.pdf?version=1&modificationDate=1523485671000&api=v2
+
+https://github.com/redhat-nfvpe/service-assurance-poc
+https://github.com/aneeshkp/qpid-ansible
+https://www.digitalocean.com/community/tutorials/how-to-install-and-manage-apache-qpid
+
+docker run -tid --net=host --name collectd \
+-v `pwd`/collect_config:/opt/collectd/etc/collectd.conf.d  \
+-v /proc:/rootfs/proc:ro -v /sys:/rootfs/sys:ro \
+-v /var/run:/var/run \
+-v /tmp:/tmp \
+--privileged opnfv/barometer-collectd 
+
+
+docker run -tid --net=host --name collectd \
+-v /proc:/rootfs/proc:ro -v /sys:/rootfs/sys:ro \
+-v /var/run:/var/run \
+-v /tmp:/tmp \
+--privileged opnfv/barometer-collectd 
+
+docker run -tid --net=host --name collectd \
+-v /proc:/rootfs/proc:ro -v /sys:/rootfs/sys:ro \
+-v /var/run:/var/run \
+-v /tmp:/tmp \
+--privileged cloud-guru/collectd
+
+docker run -tid --net=host --privileged --name collectd \
+-v /collectd_config:/opt/collectd/etc/collectd.conf.d \
+-v /collectd_python_plugin/:/usr/share/collectd/python_plugin \
+-v /var/run:/var/run \
+-v /:/hostfs:ro \
+-v /tmp:/tmp \
+cloudguru1/collecd:openstack
+
+
+
+docker run -d\
+ --name graphite\
+ --restart=always\
+ -p 8080:80\
+ -p 2003-2004:2003-2004\
+ -p 2023-2024:2023-2024\
+ -p 8125:8125/udp\
+ -p 8126:8126\
+ graphiteapp/graphite-statsd
+ 
+ 
+ 
